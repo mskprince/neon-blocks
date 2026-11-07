@@ -134,6 +134,8 @@
   @keyframes tin{from{transform:translateY(30px) scale(.8);opacity:0}}
   @keyframes tout{to{transform:translateY(20px);opacity:0}}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
+  input.code{-webkit-user-select:text;user-select:text;flex:1;min-width:0;font:inherit;font-size:16px;font-weight:800;color:#fff;background:rgba(0,0,0,.3);
+    border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px 12px;text-transform:uppercase;outline:none}
 </style>
 </head>
 <body>
@@ -515,6 +517,7 @@ function mission(t, v) {
   }
   saveProfile();
 }
+const PROMO = { RAINBOW: { gems: 1200 } };
 const DAILY = [{ gems: 20 }, { hammers: 1 }, { gems: 40 }, { revives: 1 }, { rerolls: 2 }, { gems: 80 }, { revives: 2, gems: 50 }];
 function dailyAvailable() { return profile.daily.last !== today(); }
 function rewardText(r) {
@@ -983,9 +986,18 @@ function openSettings() {
     <div class="row" style="margin-top:14px;display:block;font-size:13px;line-height:1.55;font-weight:600">
       <b>Как играть</b><br>• Перетаскивай фигуры на поле и собирай полные линии.<br>• Сжигай линии ход за ходом — растёт комбо-множитель. Комбо x5 включает 🔥 Лихорадку: очки x2.<br>
       • Блоки с 💎 дают кристаллы, с ❤️ — возрождение.<br>• 🔨 Молот разбивает 3×3, 🔄 меняет фигуры.</div>
+    <div class="row"><div class="ic">🎟️</div><input class="code" id="codeIn" placeholder="Промокод" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn grn" id="codeBtn">OK</button></div>
     <button class="btn" id="sReset" style="background:rgba(255,60,60,.25);margin-top:14px">Сбросить прогресс</button>
     <button class="btn" id="mClose">Закрыть</button>`);
   bindToggles();
+  $('codeBtn').onclick = () => {
+    const code = $('codeIn').value.trim().toUpperCase(), r = PROMO[code];
+    profile.codes = profile.codes || [];
+    if (!r) { sfx('deny'); toast('Неверный промокод'); return; }
+    if (profile.codes.includes(code)) { sfx('deny'); toast('Этот промокод уже активирован'); return; }
+    profile.codes.push(code); grant(r); $('codeIn').value = ''; $('codeIn').blur();
+    sfx('coin'); setTimeout(() => sfx('level'), 150); confetti(120); toast('🎉 Получено: ' + rewardText(r));
+  };
   $('sReset').onclick = () => ask('Удалить весь прогресс?', () => { localStorage.removeItem('nb_profile'); localStorage.removeItem('nb_run'); location.reload(); }, openSettings);
   $('mClose').onclick = () => { closeModal(); sfx('click'); };
 }
