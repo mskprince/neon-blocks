@@ -133,8 +133,8 @@
   .ring svg{transform:rotate(-90deg)}
   .ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:44px}
   #toasts{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 72px);z-index:30;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
-  .toast{padding:10px 18px;border-radius:16px;background:linear-gradient(135deg,rgba(60,30,120,.96),rgba(30,15,70,.96));border:1px solid rgba(255,255,255,.2);
-    font-weight:900;font-size:15px;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:tin .4s cubic-bezier(.2,1.6,.4,1),tout .4s 2.4s forwards}
+  .toast{max-width:92vw;text-align:center;line-height:1.3;padding:8px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(60,30,120,.96),rgba(30,15,70,.96));border:1px solid rgba(255,255,255,.2);
+    font-weight:800;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:tin .4s cubic-bezier(.2,1.6,.4,1),tout .4s 3.1s forwards}
   @keyframes tin{from{transform:translateY(30px) scale(.8);opacity:0}}
   @keyframes tout{to{transform:translateY(20px);opacity:0}}
   .hint{font-size:13px;opacity:.6;margin-top:8px}
@@ -289,6 +289,8 @@ function makeIcon(type, size) {
     g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = s * 0.06; g.lineJoin = 'round'; g.stroke();
     g.beginPath(); g.moveTo(s * 0.05, s * 0.38); g.lineTo(s * 0.95, s * 0.38); g.moveTo(s * 0.35, s * 0.1); g.lineTo(s * 0.5, s * 0.95); g.lineTo(s * 0.65, s * 0.1);
     g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = s * 0.035; g.stroke();
+  } else if (type !== 'heart') {
+    drawSpecialIcon(g, type, s);
   } else {
     g.moveTo(s * 0.5, s * 0.92);
     g.bezierCurveTo(s * 0.1, s * 0.62, s * 0.0, s * 0.38, s * 0.12, s * 0.2);
@@ -303,10 +305,49 @@ function makeIcon(type, size) {
   }
   return { c, pad, size };
 }
+function starPath(g, cx, cy, R, r, n) {
+  g.beginPath();
+  for (let i = 0; i < n * 2; i++) { const a = -Math.PI / 2 + i * Math.PI / n, rad = i % 2 ? r : R; const x = cx + Math.cos(a) * rad, y = cy + Math.sin(a) * rad; i ? g.lineTo(x, y) : g.moveTo(x, y); }
+  g.closePath();
+}
+function drawSpecialIcon(g, type, s) {
+  g.lineJoin = 'round'; g.lineCap = 'round';
+  if (type === 'bomb') {
+    g.shadowColor = '#ff8a00'; g.shadowBlur = s * 0.3;
+    let gr = g.createRadialGradient(s * 0.4, s * 0.45, s * 0.05, s * 0.5, s * 0.58, s * 0.42); gr.addColorStop(0, '#70758f'); gr.addColorStop(1, '#101220');
+    g.fillStyle = gr; g.beginPath(); g.arc(s * 0.5, s * 0.6, s * 0.38, 0, 7); g.fill(); g.shadowBlur = 0;
+    g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = s * 0.05; g.stroke();
+    g.fillStyle = '#3a3d50'; g.fillRect(s * 0.41, s * 0.14, s * 0.18, s * 0.12);
+    g.strokeStyle = '#ffd23f'; g.lineWidth = s * 0.06; g.beginPath(); g.moveTo(s * 0.5, s * 0.15); g.quadraticCurveTo(s * 0.6, s * 0.0, s * 0.78, s * 0.06); g.stroke();
+    g.shadowColor = '#ffb020'; g.shadowBlur = s * 0.3; g.fillStyle = '#fff6c0'; starPath(g, s * 0.8, s * 0.06, s * 0.15, s * 0.05, 6); g.fill(); g.shadowBlur = 0;
+    g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.ellipse(s * 0.37, s * 0.47, s * 0.09, s * 0.06, -0.7, 0, 7); g.fill();
+  } else if (type === 'x2' || type === 'x3') {
+    const c1 = type === 'x2' ? '#ffe066' : '#ff8ae0', c2 = type === 'x2' ? '#ff9500' : '#9b5cff';
+    g.shadowColor = c2; g.shadowBlur = s * 0.35;
+    const gr = g.createLinearGradient(0, 0, 0, s); gr.addColorStop(0, c1); gr.addColorStop(1, c2);
+    g.fillStyle = gr; g.beginPath(); g.arc(s / 2, s / 2, s * 0.47, 0, 7); g.fill(); g.shadowBlur = 0;
+    g.strokeStyle = '#fff'; g.lineWidth = s * 0.06; g.stroke();
+    g.font = `900 ${s * 0.52}px ui-rounded,-apple-system,system-ui,sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = s * 0.12; g.strokeStyle = 'rgba(60,15,0,.55)'; g.strokeText(type, s / 2, s * 0.54); g.fillStyle = '#fff'; g.fillText(type, s / 2, s * 0.54);
+  } else if (type === 'bolt') {
+    const P = [[0.6, 0.0], [0.16, 0.56], [0.46, 0.56], [0.36, 1.0], [0.84, 0.4], [0.54, 0.4], [0.68, 0.0]];
+    g.beginPath(); P.forEach(([a, b], i) => i ? g.lineTo(a * s, b * s) : g.moveTo(a * s, b * s)); g.closePath();
+    g.shadowColor = '#ffe600'; g.shadowBlur = s * 0.45;
+    const gr = g.createLinearGradient(0, 0, 0, s); gr.addColorStop(0, '#fffbd0'); gr.addColorStop(0.5, '#ffe600'); gr.addColorStop(1, '#ff9d00');
+    g.fillStyle = gr; g.fill(); g.shadowBlur = 0; g.strokeStyle = '#fff'; g.lineWidth = s * 0.06; g.stroke();
+  } else if (type === 'rainbow') {
+    starPath(g, s / 2, s / 2, s * 0.5, s * 0.23, 5);
+    const gr = g.createLinearGradient(0, 0, s, s); ['#ff3d81', '#ffb020', '#f2e33a', '#22e39b', '#2fb6ff', '#9b5cff'].forEach((c, i) => gr.addColorStop(i / 5, c));
+    g.shadowColor = '#fff'; g.shadowBlur = s * 0.35; g.fillStyle = gr; g.fill(); g.shadowBlur = 0; g.strokeStyle = '#fff'; g.lineWidth = s * 0.07; g.stroke();
+  }
+}
+const ICON_OF = [null, 'gem', 'heart', 'bomb', 'x2', 'x3', 'bolt', 'rainbow'];
+const HINTS = { 1: '💎 Кристалл: сожги его линию — получишь кристалл', 2: '❤️ Сердце: сожги его линию — получишь возрождение', 3: '💣 Бомба: когда её линия сгорает — взрывает всё вокруг 3×3',
+  4: '✖️ x2: сожги линию с ним — очки за ход удвоятся', 5: '✖️ x3: сожги линию с ним — очки за ход x3!', 6: '⚡ Молния: сжигает весь свой ряд и столбец', 7: '🌈 Радуга: уничтожает все блоки своего цвета' };
 function buildSprites() {
   sprites = PALETTE.map(col => makeSprite(col, cell));
   sprites[GRAY] = makeSprite('#4b4f6e', cell);
-  icons.gem = makeIcon('gem', cell * 0.5); icons.heart = makeIcon('heart', cell * 0.5);
+  ICON_OF.forEach(t => { if (t) icons[t] = makeIcon(t, cell * 0.56); });
   const pad = 14, c = document.createElement('canvas');
   c.width = (bs + pad * 2 + 40) * DPR; c.height = (bs + pad * 2 + 40) * DPR;
   const g = c.getContext('2d'); g.scale(DPR, DPR); g.translate(20, 20);
@@ -337,7 +378,7 @@ function drawIcon(type, cx, cy, size, alpha = 1) {
 function drawBlock(v, x, y, size, alpha = 1, scale = 1, overrideColor = null) {
   drawSprite(overrideColor ?? colorOf(v), x, y, size, alpha, scale);
   const sp = specOf(v);
-  if (sp) drawIcon(sp === 1 ? 'gem' : 'heart', x + size / 2, y + size / 2, size * 0.5 * scale, alpha);
+  if (sp) drawIcon(ICON_OF[sp], x + size / 2, y + size / 2, size * 0.56 * scale, alpha);
 }
 
 // =====================================================================
@@ -448,6 +489,10 @@ function sfx(name, a = 0, b = 0) {
     case 'revive': tone(150, 0.8, 'sawtooth', 0.06, 0, 1200); [0, 4, 7, 12, 16].forEach((s, i) => tone(mtof(60 + s), 0.5, 'triangle', 0.12, 0.35 + i * 0.08)); noise(0.8, 0.2, 200, 9000); break;
     case 'coin': tone(988, 0.08, 'square', 0.06); tone(1319, 0.25, 'square', 0.06, 0.08); break;
     case 'level': [0, 4, 7, 12, 7, 12, 16].forEach((s, i) => tone(mtof(67 + s), 0.25, 'triangle', 0.12, i * 0.09)); break;
+    case 'boom': tone(70, 0.7, 'sine', 0.6, 0, 28); noise(0.8, 0.7, 1500, 60, 0, 'lowpass'); tone(140, 0.15, 'square', 0.08, 0, 50); break;
+    case 'zap': tone(2200, 0.3, 'sawtooth', 0.06, 0, 180); tone(1100, 0.25, 'square', 0.04, 0.03, 90); noise(0.25, 0.25, 6000, 1500); break;
+    case 'rainbow': [0, 4, 7, 11, 14, 19, 23].forEach((st, i) => tone(mtof(76 + st), 0.25, 'sine', 0.1, i * 0.04)); break;
+    case 'mult': [0, 7, 12, 19].forEach((st, i) => tone(mtof(72 + st), 0.2, 'square', 0.06, i * 0.06)); tone(mtof(91), 0.6, 'triangle', 0.08, 0.24); break;
     case 'deny': tone(180, 0.15, 'square', 0.06, 0, 120); break;
     case 'over': [0, -3, -7, -12].forEach((s, i) => tone(330 * Math.pow(2, s / 12), 0.45, 'sawtooth', 0.05, i * 0.16)); tone(110, 1.2, 'sine', 0.3, 0.2, 40); break;
   }
@@ -503,6 +548,7 @@ const MISSION_POOL = [
   { t: 'gems', n: [4, 8, 15], txt: n => `Собери ${n} 💎 с поля`, ic: '💎' },
   { t: 'multi', n: [2, 4, 7], txt: n => `Сожги 2+ линии разом ${n} раз`, ic: '💥' },
   { t: 'games', n: [2, 3, 5], txt: n => `Сыграй ${n} игры`, ic: '🎮' },
+  { t: 'bombs', n: [2, 5, 10], txt: n => `Взорви ${n} ${n < 5 ? 'бомбы' : 'бомб'}`, ic: '💣' },
 ];
 const MISSION_REWARD = [{ gems: 20 }, { gems: 35, hammers: 1 }, { revives: 1, gems: 25 }];
 function ensureMissions() {
@@ -549,6 +595,17 @@ function randPiece(easy) {
   const s = bases[i].rots[rand(bases[i].rots.length)];
   return { cells: s.cells, w: s.w, h: s.h, color: 0, sp: s.cells.map(() => 0) };
 }
+function rollSpecial() {
+  const r = Math.random(), b = Math.min(score / 20000, 0.04);
+  if (r < 0.025) return 2;          // heart
+  if (r < 0.13) return 1;           // gem
+  if (r < 0.19 + b) return 3;       // bomb
+  if (r < 0.24 + b) return 4;       // x2
+  if (r < 0.26 + b) return 5;       // x3
+  if (r < 0.30 + b) return 6;       // lightning
+  if (r < 0.32 + b) return 7;       // rainbow
+  return 0;
+}
 function newSet(animate = true, easy = false) {
   let bestSet = null, bestSc = -1;
   for (let a = 0; a < 60; a++) {
@@ -563,11 +620,15 @@ function newSet(animate = true, easy = false) {
     const [x, y] = slotPos(i);
     p.color = cols[i]; p.tx = x; p.ty = y; p.ts = p.s = tcell / cell;
     p.x = animate ? x + W : x; p.y = y; p.delay = animate ? i * 0.08 : 0;
-    const r = Math.random();
-    if (!heartUsed && r < 0.03) { p.sp[rand(p.cells.length)] = 2; heartUsed = true; }
-    else if (r < 0.2) p.sp[rand(p.cells.length)] = 1;
+    let sp = rollSpecial();
+    if (sp === 2) { if (heartUsed) sp = 1; heartUsed = true; }
+    if (sp) p.sp[rand(p.cells.length)] = sp;
     return p;
   });
+  profile.seen = profile.seen || {};
+  let hintDelay = 500;
+  for (const p of tray) for (const sp of p.sp) if (sp && !profile.seen[sp]) { profile.seen[sp] = 1; const h = HINTS[sp]; setTimeout(() => toast(h), hintDelay); hintDelay += 1200; }
+  saveProfile();
   if (animate) sfx('new');
   refreshFit();
 }
@@ -590,17 +651,52 @@ function addFlyer(type, x, y, delay) { const [tx, ty] = hudTarget(type); flyers.
 function collectSpecial(sp, x, y, delay = 0) {
   if (!sp) return;
   if (sp === 1) { addFlyer('gem', x, y, delay); profile.gems++; run.gems++; mission('gems', 1); }
-  else { addFlyer('heart', x, y, delay); profile.revives++; run.hearts++; setTimeout(() => toast('❤️ +1 возрождение!'), 300); }
+  else if (sp === 2) { addFlyer('heart', x, y, delay); profile.revives++; run.hearts++; setTimeout(() => toast('❤️ +1 возрождение!'), 300); }
   saveProfile();
 }
+// Destroys the given cells and resolves special blocks with chain reactions.
+// Returns { mult, extra, bombs } — score multiplier, cells destroyed beyond the input, bombs detonated.
 function startDying(cellsMap) {
-  for (const [k, d] of cellsMap) {
+  const queue = [...cellsMap.entries()], done = new Set();
+  const orig = queue.filter(([k]) => grid[(k / N) | 0][k % N]).length;
+  let mult = 1, bombs = 0, head = 0;
+  const push = (r, c, d) => { if (r >= 0 && c >= 0 && r < N && c < N && grid[r][c]) queue.push([r * N + c, d]); };
+  while (head < queue.length) {
+    const [k, d] = queue[head++];
+    if (done.has(k)) continue;
     const R = (k / N) | 0, C = k % N, v = grid[R][C];
     if (!v) continue;
+    done.add(k);
     dying.push({ r: R, c: C, v, t: 0, delay: d, spawned: false });
-    collectSpecial(specOf(v), bx + (C + 0.5) * cell, by + (R + 0.5) * cell, d);
     grid[R][C] = 0;
+    const sp = specOf(v), x = bx + (C + 0.5) * cell, y = by + (R + 0.5) * cell;
+    if (sp === 1 || sp === 2) collectSpecial(sp, x, y, d);
+    else if (sp === 4 || sp === 5) {
+      const m = sp === 4 ? 2 : 3; mult *= m;
+      texts.push({ text: 'x' + m, x, y, t: -d, max: 1, size: cell * 0.9, color: sp === 4 ? '#ffd23f' : '#ff8ae0', big: true });
+    } else if (sp === 3) {
+      bombs++;
+      const bd = d + 0.14;
+      beams.push({ ring: true, x, y, t: -bd, color: '#ff8a00' }, { ring: true, x, y, t: -bd - 0.08, color: '#ff8a00' });
+      texts.push({ text: 'БУМ!', x, y, t: -bd, max: 0.9, size: cell * 0.85, color: '#ff8a00', big: true });
+      setTimeout(() => { sfx('boom'); shake = Math.max(shake, 22); doFlash('#ff8a00', 0.22); }, bd * 1000);
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) push(R + dr, C + dc, bd + (Math.abs(dr) + Math.abs(dc)) * 0.04);
+    } else if (sp === 6) {
+      const ld = d + 0.1;
+      beams.push({ row: R, t: -ld, color: '#ffe600' }, { col: C, t: -ld, color: '#ffe600' });
+      setTimeout(() => { sfx('zap'); shake = Math.max(shake, 14); doFlash('#ffe600', 0.15); }, ld * 1000);
+      for (let i = 0; i < N; i++) { push(R, i, ld + Math.abs(i - C) * 0.03); push(i, C, ld + Math.abs(i - R) * 0.03); }
+    } else if (sp === 7) {
+      const col = colorOf(v), rd = d + 0.15;
+      setTimeout(() => { sfx('rainbow'); doFlash(PALETTE[col], 0.2); }, rd * 1000);
+      texts.push({ text: '🌈', x, y, t: -rd, max: 0.9, size: cell * 0.9, color: '#ffffff', big: true });
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (grid[r][c] && colorOf(grid[r][c]) === col) {
+        const dd = rd + (Math.abs(r - R) + Math.abs(c - C)) * 0.03;
+        push(r, c, dd); beams.push({ ring: true, x: bx + (c + 0.5) * cell, y: by + (r + 0.5) * cell, t: -dd, color: PALETTE[col], small: true });
+      }
+    }
   }
+  return { mult, extra: Math.max(0, done.size - orig), bombs };
 }
 const WORDS = ['', '', 'Отлично!', 'Супер!', 'Невероятно!', 'Безумие!', 'ЛЕГЕНДА!'];
 function place(i, r, c) {
@@ -620,11 +716,13 @@ function place(i, r, c) {
     const set = new Map();
     for (const R of rows) for (let C = 0; C < N; C++) set.set(R * N + C, Math.abs(C - ac) * 0.035);
     for (const C of cols) for (let R = 0; R < N; R++) { const k = R * N + C, d = Math.abs(R - ar) * 0.035; set.set(k, set.has(k) ? Math.min(set.get(k), d) : d); }
-    startDying(set);
+    const res = startDying(set);
+    if (res.bombs) mission('bombs', res.bombs);
     rows.forEach(R => beams.push({ row: R, t: 0, color: PALETTE[p.color] }));
     cols.forEach(C => beams.push({ col: C, t: 0, color: PALETTE[p.color] }));
-    const mult = streak * (isFever() ? 2 : 1);
-    const gained = 10 * L * L * mult;
+    const mult = streak * (isFever() ? 2 : 1) * res.mult;
+    const gained = (10 * L * L + res.extra * 5) * mult;
+    if (res.mult > 1) setTimeout(() => { texts.push({ text: `МНОЖИТЕЛЬ x${res.mult}!`, x: bx + bs / 2, y: by + bs * 0.64, t: 0, max: 1.5, size: Math.min(36, W * 0.085), color: '#ffd23f', big: true }); sfx('mult'); }, 220);
     pts += gained;
     shake = Math.min(26, 5 + L * 4 + streak * 1.5);
     doFlash(PALETTE[p.color], Math.min(0.2, 0.05 + L * 0.035));
@@ -677,7 +775,8 @@ function useHammerAt(R, C) {
   if (!set.size) { sfx('deny'); toast('Здесь нечего разбивать — нажми на блоки'); return; }
   profile.hammers--; saveProfile();
   hammerMode = false; syncBoosters();
-  startDying(set);
+  const res = startDying(set);
+  if (res.bombs) mission('bombs', res.bombs);
   beams.push({ ring: true, x: bx + (C + 0.5) * cell, y: by + (R + 0.5) * cell, t: 0, color: '#ff3d81' });
   shake = 16; doFlash('#ff3d81', 0.18); sfx('hammer');
   refreshFit(); saveRun();
@@ -842,7 +941,7 @@ function doFlash(color, a) {
 }
 function toast(msg) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
-  $('toasts').appendChild(t); setTimeout(() => t.remove(), 3000);
+  $('toasts').appendChild(t); setTimeout(() => t.remove(), 3600);
 }
 
 // =====================================================================
@@ -989,7 +1088,7 @@ function openSettings() {
     <div class="hint" style="margin-top:12px">Нет звука на iPhone? Выключи бесшумный режим переключателем сбоку.</div>
     <div class="row" style="margin-top:14px;display:block;font-size:13px;line-height:1.55;font-weight:600">
       <b>Как играть</b><br>• Перетаскивай фигуры на поле и собирай полные линии.<br>• Сжигай линии ход за ходом — растёт комбо-множитель. Комбо x5 включает 🔥 Лихорадку: очки x2.<br>
-      • Блоки с 💎 дают кристаллы, с ❤️ — возрождение.<br>• 🔨 Молот разбивает 3×3, 🔄 меняет фигуры.</div>
+      • Блоки с 💎 дают кристаллы, с ❤️ — возрождение.<br>• 💣 Бомба взрывает 3×3, ⚡ Молния — ряд и столбец, 🌈 Радуга — все блоки своего цвета. Особые блоки срабатывают цепочкой!<br>• x2 / x3 умножают очки за ход (и перемножаются между собой).<br>• 🔨 Молот разбивает 3×3, 🔄 меняет фигуры.</div>
     <div class="row"><div class="ic">🎟️</div><input class="code" id="codeIn" placeholder="Промокод" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn grn" id="codeBtn">OK</button></div>
     <button class="btn" id="sReset" style="background:rgba(255,60,60,.25);margin-top:14px">Сбросить прогресс</button>
     <button class="btn" id="mClose">Закрыть</button>`);
@@ -1139,7 +1238,7 @@ function render() {
   }
   for (const d of dying) {
     const x = bx + d.c * cell, y = by + d.r * cell, k = (d.t - d.delay) / 0.4;
-    if (k < 0) { drawBlock(d.v & 15, x, y, cell); continue; }
+    if (k < 0) { drawBlock(d.v, x, y, cell); continue; }
     const sc = Math.max(0, k < 0.25 ? 1 + 0.25 * (k / 0.25) : 1.25 * (1 - (k - 0.25) / 0.75));
     drawSprite(colorOf(d.v), x, y, cell, 1, sc);
     ctx.fillStyle = `rgba(255,255,255,${Math.max(0, 0.9 - k * 1.5)})`;
@@ -1147,10 +1246,11 @@ function render() {
   }
   ctx.globalCompositeOperation = 'lighter';
   for (const b of beams) {
+    if (b.t < 0) continue;
     const k = b.t / 0.5, a = (1 - k) * 0.9;
     if (b.ring) {
-      ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = cell * 0.4 * (1 - k) + 2;
-      ctx.beginPath(); ctx.arc(b.x, b.y, cell * (0.5 + 3 * k), 0, 7); ctx.stroke(); continue;
+      ctx.strokeStyle = b.color === '#ff3d81' ? `rgba(255,255,255,${a})` : rgba(b.color, a); ctx.lineWidth = cell * 0.4 * (1 - k) + 2;
+      ctx.beginPath(); ctx.arc(b.x, b.y, cell * (b.small ? 0.3 + 0.9 * k : 0.5 + 3 * k), 0, 7); ctx.stroke(); continue;
     }
     const th = cell * (0.6 + 2.2 * k);
     if (b.row !== undefined) {
@@ -1201,6 +1301,7 @@ function render() {
   // floating texts
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   for (const t of texts) {
+    if (t.t < 0) continue;
     const k = t.t / t.max, sc = k < 0.15 ? easeOutBack(k / 0.15) : 1, a = Math.max(0, k > 0.7 ? (1 - k) / 0.3 : 1);
     ctx.save(); ctx.translate(t.x, t.y - (t.big ? 20 : 60) * k); ctx.scale(sc, sc);
     ctx.font = `900 ${t.size}px ui-rounded,-apple-system,system-ui,sans-serif`;
