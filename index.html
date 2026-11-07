@@ -16,7 +16,7 @@
 <style>
   :root{--b1:#1c0f47;--b2:#0d0726;--b3:#07040f;--c1:rgba(255,61,129,.30);--c2:rgba(47,182,255,.26);--c3:rgba(155,92,255,.32);--c4:rgba(34,227,155,.22)}
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;overflow:hidden;background:#0d0824;touch-action:none;color:#fff;
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;position:fixed;inset:0;background:#0d0824;touch-action:none;color:#fff;
     -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none;
     -webkit-tap-highlight-color:transparent;font-family:ui-rounded,-apple-system,"SF Pro Rounded",system-ui,sans-serif}
   button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer;-webkit-appearance:none;appearance:none}
@@ -994,6 +994,7 @@ function openSettings() {
     <button class="btn" id="sReset" style="background:rgba(255,60,60,.25);margin-top:14px">Сбросить прогресс</button>
     <button class="btn" id="mClose">Закрыть</button>`);
   bindToggles();
+  $('codeIn').onkeydown = e => { if (e.key === 'Enter') $('codeBtn').click(); };
   $('codeBtn').onclick = () => {
     const code = $('codeIn').value.trim().toUpperCase(), r = PROMO[code];
     profile.codes = profile.codes || [];
@@ -1223,6 +1224,20 @@ function frame(t) {
   if (dirty || isBusy()) { render(); dirty = false; }
   requestAnimationFrame(frame);
 }
+// iOS Safari: the on-screen keyboard (promo code field) scrolls the page and does not
+// scroll it back, which shifts the picture away from where touches land. Keep the page pinned.
+function pinViewport() {
+  const a = document.activeElement;
+  if (a && a.tagName === 'INPUT') return;
+  if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+  if (document.documentElement.scrollTop) document.documentElement.scrollTop = 0;
+  if (document.body.scrollTop) document.body.scrollTop = 0;
+}
+document.addEventListener('focusout', () => { setTimeout(pinViewport, 50); setTimeout(pinViewport, 350); setTimeout(resize, 400); });
+window.addEventListener('scroll', pinViewport);
+if (window.visualViewport) { visualViewport.addEventListener('resize', pinViewport); visualViewport.addEventListener('scroll', pinViewport); }
+document.addEventListener('pointerdown', pinViewport, true);
+window.addEventListener('orientationchange', () => setTimeout(resize, 300));
 window.addEventListener('resize', resize);
 applyTheme();
 resize();
